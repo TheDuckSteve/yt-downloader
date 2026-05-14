@@ -105,7 +105,7 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
     else:
         return {
             **base_opts,
-            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            "format": "bestvideo+bestaudio/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
             "merge_output_format": "mp4",
         }
 
