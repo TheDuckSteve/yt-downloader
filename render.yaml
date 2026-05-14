@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: yt-downloader
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PYTHON_ENV
+        value: production
