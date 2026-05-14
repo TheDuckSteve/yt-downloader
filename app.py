@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import re
@@ -13,6 +14,24 @@ from flask import Flask, Response, jsonify, render_template, request, send_file,
 app = Flask(__name__)
 
 DOWNLOAD_DIR = Path("/tmp/yt_downloads") if os.name != "nt" else Path("downloads")
+
+# YouTube Cookies aus Umgebungsvariable laden (Base64-kodiert)
+COOKIES_FILE = Path("/tmp/yt_cookies.txt")
+
+def setup_cookies():
+    """Cookies aus YOUTUBE_COOKIES Umgebungsvariable in Datei speichern."""
+    cookies_b64 = os.environ.get("YOUTUBE_COOKIES", "")
+    if cookies_b64:
+        try:
+            cookies_content = base64.b64decode(cookies_b64).decode("utf-8")
+            COOKIES_FILE.write_text(cookies_content)
+            print("✅ YouTube Cookies geladen!")
+            return True
+        except Exception as e:
+            print(f"⚠️ Cookies-Fehler: {e}")
+    return False
+
+HAS_COOKIES = setup_cookies()
 DOWNLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
 progress_store: dict[str, dict] = {}
@@ -58,15 +77,23 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
 
     outtmpl = str(output_path / "%(title)s.%(ext)s")
 
-    # Bot-Detection umgehen: iOS/Android Client verwenden
-    extractor_args = {"youtube": {"player_client": ["ios", "android", "web"]}}
+    extractor_args = {"youtube": {"player_client": ["tv_embedded", "ios", "web"]}}
+
+    base_opts = {
+        "outtmpl": outtmpl,
+        "progress_hooks": [progress_hook],
+        "extractor_args": extractor_args,
+        "quiet": True,
+    }
+
+    # Cookies verwenden falls vorhanden
+    if HAS_COOKIES and COOKIES_FILE.exists():
+        base_opts["cookiefile"] = str(COOKIES_FILE)
 
     if fmt == "mp3":
         return {
+            **base_opts,
             "format": "bestaudio/best",
-            "outtmpl": outtmpl,
-            "progress_hooks": [progress_hook],
-            "extractor_args": extractor_args,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -74,16 +101,12 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
                     "preferredquality": "320",
                 }
             ],
-            "quiet": True,
         }
     else:
         return {
+            **base_opts,
             "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-            "outtmpl": outtmpl,
-            "progress_hooks": [progress_hook],
-            "extractor_args": extractor_args,
             "merge_output_format": "mp4",
-            "quiet": True,
         }
 
 
@@ -124,8 +147,10 @@ def get_info():
         opts = {
             "quiet": True,
             "skip_download": True,
-            "extractor_args": {"youtube": {"player_client": ["ios", "android", "web"]}},
+            "extractor_args": {"youtube": {"player_client": ["tv_embedded", "ios", "web"]}},
         }
+        if HAS_COOKIES and COOKIES_FILE.exists():
+            opts["cookiefile"] = str(COOKIES_FILE)
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
         return jsonify({
