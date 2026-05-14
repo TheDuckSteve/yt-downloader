@@ -58,11 +58,15 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
 
     outtmpl = str(output_path / "%(title)s.%(ext)s")
 
+    # Bot-Detection umgehen: iOS/Android Client verwenden
+    extractor_args = {"youtube": {"player_client": ["ios", "android", "web"]}}
+
     if fmt == "mp3":
         return {
             "format": "bestaudio/best",
             "outtmpl": outtmpl,
             "progress_hooks": [progress_hook],
+            "extractor_args": extractor_args,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -77,6 +81,7 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
             "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "outtmpl": outtmpl,
             "progress_hooks": [progress_hook],
+            "extractor_args": extractor_args,
             "merge_output_format": "mp4",
             "quiet": True,
         }
@@ -116,7 +121,11 @@ def get_info():
     if not url:
         return jsonify({"error": "Keine URL angegeben"}), 400
     try:
-        opts = {"quiet": True, "skip_download": True}
+        opts = {
+            "quiet": True,
+            "skip_download": True,
+            "extractor_args": {"youtube": {"player_client": ["ios", "android", "web"]}},
+        }
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
         return jsonify({
