@@ -1,9 +1,14 @@
 FROM python:3.11-slim
 
-# ffmpeg installieren (für MP3-Konvertierung)
+# ffmpeg + curl + unzip installieren
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg curl unzip && \
     rm -rf /var/lib/apt/lists/*
+
+# Deno JS Runtime (für yt-dlp YouTube Extraktion)
+RUN curl -fsSL https://deno.land/install.sh | sh
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="$DENO_INSTALL/bin:$PATH"
 
 WORKDIR /app
 
