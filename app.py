@@ -77,12 +77,9 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
 
     outtmpl = str(output_path / "%(title)s.%(ext)s")
 
-    extractor_args = {"youtube": {"player_client": ["web"]}}
-
     base_opts = {
         "outtmpl": outtmpl,
         "progress_hooks": [progress_hook],
-        "extractor_args": extractor_args,
         "quiet": True,
     }
 
@@ -147,7 +144,6 @@ def get_info():
         opts = {
             "quiet": True,
             "skip_download": True,
-            "extractor_args": {"youtube": {"player_client": ["tv_embedded", "ios", "web"]}},
         }
         if HAS_COOKIES and COOKIES_FILE.exists():
             opts["cookiefile"] = str(COOKIES_FILE)
