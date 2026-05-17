@@ -1,14 +1,11 @@
 FROM python:3.11-slim
 
-# ffmpeg + curl + unzip installieren
+# ffmpeg + nodejs installieren (Node.js fuer yt-dlp n-challenge solver)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg curl unzip && \
+    apt-get install -y --no-install-recommends ffmpeg curl ca-certificates gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
-
-# Deno JS Runtime (für yt-dlp YouTube Extraktion)
-RUN curl -fsSL https://deno.land/install.sh | sh
-ENV DENO_INSTALL="/root/.deno"
-ENV PATH="$DENO_INSTALL/bin:$PATH"
 
 WORKDIR /app
 

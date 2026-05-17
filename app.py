@@ -77,7 +77,7 @@ def get_ydl_opts(fmt: str, job_id: str, output_path: Path) -> dict:
 
     outtmpl = str(output_path / "%(title)s.%(ext)s")
 
-    extractor_args = {"youtube": {"player_client": ["tv_embedded", "ios", "web"]}}
+    extractor_args = {"youtube": {"player_client": ["web"]}}
 
     base_opts = {
         "outtmpl": outtmpl,
